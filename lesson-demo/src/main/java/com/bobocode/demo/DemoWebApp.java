@@ -23,8 +23,7 @@ public class DemoWebApp {
     @SneakyThrows
     public static void main(String[] args) {
         String photos = getForBody("https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=12&api_key=DEMO_KEY");
-        var mapper = new ObjectMapper();
-        JsonNode jsonNode = mapper.readValue(photos, JsonNode.class);
+        JsonNode jsonNode = new ObjectMapper().readValue(photos, JsonNode.class);
         List<Image> images = StreamSupport.stream(jsonNode.get("photos").spliterator(), false)
                 .map(node -> node.get("img_src"))
                 .map(JsonNode::asText)
@@ -54,8 +53,9 @@ public class DemoWebApp {
         URI uri = URI.create(url);
         var factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         try (var socket = (SSLSocket) factory.createSocket(uri.getHost(), 443);
-             var writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
+             var writer = new PrintWriter(socket.getOutputStream(), false);
              var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
             writer.println("GET " + uri.getPath() + "?" + uri.getQuery() + " HTTP/1.0");
             writer.println("Host: " + uri.getHost());
             writer.println();
@@ -67,7 +67,7 @@ public class DemoWebApp {
     @SneakyThrows
     private static void fetchLocation(List<Image> images) {
         try (var socket = new Socket(URI.create(images.get(0).initLocation).getHost(), 80);
-             var writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
+             var writer = new PrintWriter(socket.getOutputStream(), false);
              var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             images.forEach(img ->
@@ -80,7 +80,7 @@ public class DemoWebApp {
     private static void fetchLength(List<Image> images) {
         var factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         try (var socket = (SSLSocket) factory.createSocket(URI.create(images.get(0).location).getHost(), 443);
-             var writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
+             var writer = new PrintWriter(socket.getOutputStream(), false);
              var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             images.forEach(img -> {
@@ -107,10 +107,8 @@ public class DemoWebApp {
     @SneakyThrows
     private static void post(BobocodeRequest request) {
         URI uri = URI.create("https://bobocode.herokuapp.com/nasa/pictures");
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectWriter objectWriter = mapper.writerFor(request.getClass());
+        ObjectWriter objectWriter = new ObjectMapper().writerFor(request.getClass());
         String jsonBody = objectWriter.writeValueAsString(request);
-        System.out.println(jsonBody);
         try (var socket = new Socket(uri.getHost(), 80);
              var writer = new PrintWriter(socket.getOutputStream(), false);
              var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
@@ -119,7 +117,7 @@ public class DemoWebApp {
             writer.println("Host: " + uri.getHost() + "\r");
             writer.println("Content-Length: " + jsonBody.length() + "\r");
             writer.println("Content-Type: application/json;charset=UTF-8\r");
-            writer.println("User-Agent: anderb_socket/0.1\r");
+            writer.println("User-Agent: AnderbSocket/0.1\r");
             writer.println("\r");
             writer.println(jsonBody + "\r");
             writer.println("\r");
