@@ -2,6 +2,7 @@ package com.bobocode.demo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -11,7 +12,6 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.Socket;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +37,15 @@ public class DemoWebApp {
                 .max(Comparator.comparing(Image::getSize))
                 .orElseThrow();
         System.out.println(maxImage);
+        post(BobocodeRequest.builder().
+                picture(
+                        Picture.builder()
+                                .url(maxImage.getInitLocation())
+                                .size(maxImage.getSize())
+                                .build()
+                )
+                .user(User.builder().firstName("Andrii").lastName("Bobrov").build())
+                .build());
     }
 
     @SneakyThrows
@@ -96,26 +105,24 @@ public class DemoWebApp {
 
     @SneakyThrows
     private static void post(BobocodeRequest request) {
-//        URI uri = URI.create("https://bobocode.herokuapp.com/nasa/pictures");
-//        var factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-//        ObjectMapper mapper = new ObjectMapper();
-//        ObjectWriter objectWriter = mapper.writerFor(request.getClass());
-//        String jsonBody = objectWriter.writeValueAsString(request);
-        String jsonBody = "{\"picture\":{\"url\":\"http://mars.jpl.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/00012/soas/rdr/ccam/CR0_398560983PRCLF0030004CCAM03012L1.PNG\",\"size\":660132},\"user\":{\"firstName\":\"Andrii\",\"lastName\":\"Bobrov\"}}";
+        URI uri = URI.create("https://bobocode.herokuapp.com/nasa/pictures");
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectWriter objectWriter = mapper.writerFor(request.getClass());
+        String jsonBody = objectWriter.writeValueAsString(request);
         System.out.println(jsonBody);
-        try (var socket = new Socket("bobocode.herokuapp.com", 80);
-             var writer = new PrintWriter(socket.getOutputStream(), false, StandardCharsets.UTF_8);
+        try (var socket = new Socket(uri.getHost(), 80);
+             var writer = new PrintWriter(socket.getOutputStream(), false);
              var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            writer.println("GET /nasa/pictures HTTP/1.1");
-            writer.println("Host: bobocode.herokuapp.com");
-//            writer.println("Content-Length: " + jsonBody.length());
-//            writer.println("Content-Length:2");
-//            writer.println("Content-Type: application/json;charset=UTF-8");
-//            writer.println("\r\n");
-//            writer.println(jsonBody);
-//            writer.println("{}");
-            writer.println();
+            writer.println("POST " + uri.getPath() + " HTTP/1.1\r");
+            writer.println("Host: " + uri.getHost() + "\r");
+            writer.println("Content-Length: " + jsonBody.length() + "\r");
+            writer.println("Content-Type: application/json;charset=UTF-8\r");
+            writer.println("User-Agent: anderb_socket/0.1\r");
+            writer.println("\r");
+            writer.println(jsonBody + "\r");
+            writer.println("\r");
+            writer.println("\r");
             writer.flush();
             System.out.println("Reading response:");
             reader.lines().forEach(System.out::println);
