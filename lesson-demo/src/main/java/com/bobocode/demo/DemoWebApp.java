@@ -25,12 +25,12 @@ public class DemoWebApp {
         String photos = getForBody("https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=12&api_key=DEMO_KEY");
         var mapper = new ObjectMapper();
         JsonNode jsonNode = mapper.readValue(photos, JsonNode.class);
-        var photosArray = jsonNode.get("photos");
-        List<Image> images = StreamSupport.stream(photosArray.spliterator(), false)
+        List<Image> images = StreamSupport.stream(jsonNode.get("photos").spliterator(), false)
                 .map(node -> node.get("img_src"))
                 .map(JsonNode::asText)
                 .map(Image::new)
                 .collect(Collectors.toList());
+
         fetchLocation(images);
         fetchLength(images);
 
