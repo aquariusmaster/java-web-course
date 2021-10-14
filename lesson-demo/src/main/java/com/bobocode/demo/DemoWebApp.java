@@ -28,10 +28,10 @@ public class DemoWebApp {
         List<Image> images = StreamSupport.stream(photosArray.spliterator(), false)
                 .map(node -> node.get("img_src"))
                 .map(JsonNode::asText)
-                .map(imgSrc -> Image.builder().initLocation(imgSrc).build())
+                .map(Image::new)
                 .collect(Collectors.toList());
-        setLocation(images);
-        setLength(images);
+        fetchLocation(images);
+        fetchLength(images);
 
         Image maxImage = images.stream()
                 .max(Comparator.comparing(Image::getSize))
@@ -64,25 +64,25 @@ public class DemoWebApp {
     }
 
     @SneakyThrows
-    private static void setLocation(List<Image> urls) {
-        try (var socket = new Socket(URI.create(urls.get(0).initLocation).getHost(), 80);
+    private static void fetchLocation(List<Image> images) {
+        try (var socket = new Socket(URI.create(images.get(0).initLocation).getHost(), 80);
              var writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
              var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            urls.forEach(img ->
+            images.forEach(img ->
                     img.setLocation(headFor(writer, reader, URI.create(img.getInitLocation()), "Location"))
             );
         }
     }
 
     @SneakyThrows
-    private static void setLength(List<Image> urls) {
+    private static void fetchLength(List<Image> images) {
         var factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        try (var socket = (SSLSocket) factory.createSocket(URI.create(urls.get(0).location).getHost(), 443);
+        try (var socket = (SSLSocket) factory.createSocket(URI.create(images.get(0).location).getHost(), 443);
              var writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
              var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            urls.forEach(img -> {
+            images.forEach(img -> {
                         String lengthStr = headFor(writer, reader, URI.create(img.location), "Content-Length");
                         img.setSize(Long.parseLong(lengthStr));
                     }
@@ -135,6 +135,10 @@ public class DemoWebApp {
         private String initLocation;
         private String location;
         private long size;
+
+        public Image(String initLocation) {
+            this.initLocation = initLocation;
+        }
     }
 
     @Data
