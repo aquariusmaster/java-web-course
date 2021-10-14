@@ -4,6 +4,7 @@ import com.bobocode.util.ExerciseNotCompletedException;
 import lombok.SneakyThrows;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 
 /**
@@ -24,7 +25,7 @@ public class ClientUtil {
      */
     @SneakyThrows
     public static Socket openSocket(String host, int port) {
-        throw new ExerciseNotCompletedException(); // todo: implement according to javadoc and verify by ClientUtilTest
+        return new Socket(InetAddress.getByName(host), port);
     }
 
     /**
@@ -62,6 +63,9 @@ public class ClientUtil {
      */
     @SneakyThrows
     public static void writeToSocket(String message, Socket socket) {
-        throw new ExerciseNotCompletedException(); // todo: implement according to javadoc and verify by ClientUtilTest
+        try (var writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
+            writer.write(message);
+            writer.flush();
+        }
     }
 }
