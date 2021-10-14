@@ -36,6 +36,15 @@ class ClientUtilTest {
         try (var serverSocket = new ServerSocket(port);
              var clientSocket = openSocket(serverSocket.getInetAddress().getHostAddress(), port)) {
 
+
+
+            System.out.println("serverSocket.getInetAddress().getHostAddress(): " + serverSocket.getInetAddress().getHostAddress());
+            System.out.println("URL requested: " + clientSocket.getInetAddress().getHostName());
+            System.out.println("Client: " + clientSocket.getLocalAddress().getHostAddress() + " " + clientSocket.getLocalPort());
+            System.out.println("Server: " + ((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getAddress() + " " + clientSocket.getPort());
+            System.out.println("InetAddress.getLocalHost(): " + InetAddress.getLocalHost());
+
+
             assertNotNull(clientSocket);
             assertThat(clientSocket.getClass()).isEqualTo(Socket.class);
             assertThat(clientSocket.getPort()).isEqualTo(port);
