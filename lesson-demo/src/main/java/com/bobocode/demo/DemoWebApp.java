@@ -3,6 +3,7 @@ package com.bobocode.demo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -131,6 +132,7 @@ public class DemoWebApp {
 
     @Data
     @Builder
+    @AllArgsConstructor
     static class Image {
         private String initLocation;
         private String location;
