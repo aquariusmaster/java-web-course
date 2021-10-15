@@ -27,14 +27,13 @@ public class DemoWebApp {
     public static void main(String[] args) {
         URI photosUri = URI.create("https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=12&api_key=DEMO_KEY");
 
-        String photos = doWithinOpenedSocket(photosUri,
-                (writer, reader) -> {
-                    writer.println("GET " + photosUri.getPath() + "?" + photosUri.getQuery() + " HTTP/1.0");
-                    writer.println("Host: " + photosUri.getHost());
-                    writer.println();
-                    writer.flush();
-                    return reader.lines().filter(s -> s.startsWith("{")).findFirst().orElseThrow();
-                });
+        String photos = doWithinOpenedSocket(photosUri, (writer, reader) -> {
+            writer.println("GET " + photosUri.getPath() + "?" + photosUri.getQuery() + " HTTP/1.0");
+            writer.println("Host: " + photosUri.getHost());
+            writer.println();
+            writer.flush();
+            return reader.lines().filter(s -> s.startsWith("{")).findFirst().orElseThrow();
+        });
 
         JsonNode jsonNode = new ObjectMapper().readValue(photos, JsonNode.class);
         List<Image> images = StreamSupport.stream(jsonNode.get("photos").spliterator(), false)
@@ -99,8 +98,7 @@ public class DemoWebApp {
         return reader.lines()
                 .filter(line -> line.startsWith(header))
                 .map(im -> im.substring(header.length() + 2))
-                .findFirst()
-                .orElseThrow();
+                .findFirst().orElseThrow();
     }
 
     @SneakyThrows
