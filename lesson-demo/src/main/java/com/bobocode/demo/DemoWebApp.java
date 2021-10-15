@@ -70,7 +70,7 @@ public class DemoWebApp {
                         new User("Andrii", "Bobrov")
         );
 
-        URI bobocodeServer = URI.create("http://bobocode.herokuapp.com/nasa/pictures");
+        URI bobocodeServer = URI.create("https://bobocode.herokuapp.com/nasa/pictures");
         ObjectWriter objectWriter = new ObjectMapper().writerFor(BobocodeRequest.class);
         String jsonBody = objectWriter.writeValueAsString(request);
 
