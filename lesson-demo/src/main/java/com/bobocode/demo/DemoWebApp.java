@@ -2,7 +2,6 @@ package com.bobocode.demo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +15,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URI;
 import java.util.Comparator;
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -25,9 +23,9 @@ public class DemoWebApp {
 
     @SneakyThrows
     public static void main(String[] args) {
-        URI photosUri = URI.create("https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=12&api_key=DEMO_KEY");
+        var photosUri = URI.create("https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=12&api_key=DEMO_KEY");
 
-        String photos = doWithinOpenedSocket(photosUri, (writer, reader) -> {
+        var photos = doWithinOpenedSocket(photosUri, (writer, reader) -> {
             writer.println("GET " + photosUri.getPath() + "?" + photosUri.getQuery() + " HTTP/1.0");
             writer.println("Host: " + photosUri.getHost());
             writer.println();
@@ -35,8 +33,8 @@ public class DemoWebApp {
             return reader.lines().filter(s -> s.startsWith("{")).findFirst().orElseThrow();
         });
 
-        JsonNode jsonNode = new ObjectMapper().readValue(photos, JsonNode.class);
-        List<Image> images = StreamSupport.stream(jsonNode.get("photos").spliterator(), false)
+        var jsonNode = new ObjectMapper().readValue(photos, JsonNode.class);
+        var images = StreamSupport.stream(jsonNode.get("photos").spliterator(), false)
                 .map(node -> node.get("img_src"))
                 .map(JsonNode::asText)
                 .map(Image::new)
@@ -51,27 +49,25 @@ public class DemoWebApp {
 
         doWithinOpenedSocket(URI.create(images.get(0).getLocation()), (writer, reader) -> {
             images.forEach(img -> {
-                        String lengthStr = headFor(writer, reader, URI.create(img.getLocation()), "Content-Length");
+                        var lengthStr = headFor(writer, reader, URI.create(img.getLocation()), "Content-Length");
                         img.setSize(Long.parseLong(lengthStr));
                     }
             );
             return null;
         });
 
-        Image maxImage = images.stream()
-                .max(Comparator.comparing(Image::getSize))
-                .orElseThrow();
+        var maxImage = images.stream().max(Comparator.comparing(Image::getSize)).orElseThrow();
 
         var request = new BobocodeRequest(
                 new Picture(maxImage.getInitLocation(), maxImage.getSize()),
                 new User("Andrii", "Bobrov")
         );
 
-        URI bobocodeServer = URI.create("https://bobocode.herokuapp.com/nasa/pictures");
-        ObjectWriter objectWriter = new ObjectMapper().writerFor(BobocodeRequest.class);
-        String jsonBody = objectWriter.writeValueAsString(request);
+        var bobocodeServer = URI.create("https://bobocode.herokuapp.com/nasa/pictures");
+        var objectWriter = new ObjectMapper().writerFor(BobocodeRequest.class);
+        var jsonBody = objectWriter.writeValueAsString(request);
 
-        String response = doWithinOpenedSocket(bobocodeServer, (writer, reader) -> {
+        var response = doWithinOpenedSocket(bobocodeServer, (writer, reader) -> {
             writer.println("POST " + bobocodeServer.getPath() + " HTTP/1.1\r");
             writer.println("Host: " + bobocodeServer.getHost() + "\r");
             writer.println("Content-Length: " + jsonBody.length() + "\r");
