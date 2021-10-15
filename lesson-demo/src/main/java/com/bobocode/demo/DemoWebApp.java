@@ -7,19 +7,17 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 
-import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URI;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -66,8 +64,8 @@ public class DemoWebApp {
                 .orElseThrow();
 
         var request = new BobocodeRequest(
-                        new Picture(maxImage.getInitLocation(), maxImage.getSize()),
-                        new User("Andrii", "Bobrov")
+                new Picture(maxImage.getInitLocation(), maxImage.getSize()),
+                new User("Andrii", "Bobrov")
         );
 
         URI bobocodeServer = URI.create("https://bobocode.herokuapp.com/nasa/pictures");
