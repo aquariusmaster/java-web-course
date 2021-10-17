@@ -14,10 +14,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URI;
-import java.util.Comparator;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+
+import static java.util.Comparator.comparingLong;
 
 public class DemoWebApp {
 
@@ -33,10 +33,9 @@ public class DemoWebApp {
             return reader.lines().filter(s -> s.startsWith("{")).findFirst().orElseThrow();
         });
 
-        var jsonNode = new ObjectMapper().readValue(photos, JsonNode.class);
-        var images = StreamSupport.stream(jsonNode.get("photos").spliterator(), false)
-                .map(node -> node.get("img_src"))
-                .map(JsonNode::asText)
+        var images = new ObjectMapper().readValue(photos, JsonNode.class)
+                .findValuesAsText("img_src")
+                .stream()
                 .map(Image::new)
                 .collect(Collectors.toList());
 
@@ -56,7 +55,7 @@ public class DemoWebApp {
             return null;
         });
 
-        var maxImage = images.stream().max(Comparator.comparing(Image::getSize)).orElseThrow();
+        var maxImage = images.stream().max(comparingLong(Image::getSize)).orElseThrow();
 
         var request = new BobocodeRequest(
                 new Picture(maxImage.getInitLocation(), maxImage.getSize()),
@@ -64,8 +63,7 @@ public class DemoWebApp {
         );
 
         var bobocodeServer = URI.create("https://bobocode.herokuapp.com/nasa/pictures");
-        var objectWriter = new ObjectMapper().writerFor(BobocodeRequest.class);
-        var jsonBody = objectWriter.writeValueAsString(request);
+        var jsonBody = new ObjectMapper().writeValueAsString(request);
 
         var response = doWithinOpenedSocket(bobocodeServer, (writer, reader) -> {
             writer.println("POST " + bobocodeServer.getPath() + " HTTP/1.1\r");
@@ -100,7 +98,7 @@ public class DemoWebApp {
     @SneakyThrows
     private static String doWithinOpenedSocket(URI uri, BiFunction<PrintWriter, BufferedReader, String> biFunction) {
         try (var socket = openSocketConnection(uri);
-             var writer = new PrintWriter(socket.getOutputStream(), false);
+             var writer = new PrintWriter(socket.getOutputStream());
              var reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             return biFunction.apply(writer, reader);
