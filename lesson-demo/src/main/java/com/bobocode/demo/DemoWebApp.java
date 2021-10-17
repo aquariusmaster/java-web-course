@@ -66,7 +66,7 @@ public class DemoWebApp {
         var jsonBody = new ObjectMapper().writeValueAsString(request);
 
         var response = doWithinOpenedSocket(bobocodeServer, (writer, reader) -> {
-            writer.println("POST " + bobocodeServer.getPath() + " HTTP/1.1\r");
+            writer.println("POST " + bobocodeServer.getPath() + " HTTP/1.0\r");
             writer.println("Host: " + bobocodeServer.getHost() + "\r");
             writer.println("Content-Length: " + jsonBody.length() + "\r");
             writer.println("Content-Type: application/json;charset=UTF-8\r");
